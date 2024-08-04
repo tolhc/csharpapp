@@ -37,7 +37,7 @@ public class HttpClientWrapper : IHttpClientWrapper
         using var response = await _httpClient.SendAsync(httpRequestMessage, httpCompletionOption, cancellationToken);
         response.EnsureSuccessStatusCode();
         var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        return await JsonSerializer.DeserializeAsync<T>(responseStream, cancellationToken: cancellationToken) ?? default;
+        return await JsonSerializer.DeserializeAsync<T?>(responseStream, cancellationToken: cancellationToken) ?? default;
     }
 
     private static HttpRequestMessage GetRequestMessage<T>(HttpMethod method, string endpoint, T? body)

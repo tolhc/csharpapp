@@ -6,10 +6,10 @@ public class TodoService : ITodoService
     private readonly IHttpClientWrapper _httpClientWrapper;
 
     public TodoService(ILogger<TodoService> logger, 
-        IHttpClientWrapper httpClient)
+        IHttpClientWrapper httpClientWrapper)
     {
         _logger = logger;
-        _httpClientWrapper = httpClient;
+        _httpClientWrapper = httpClientWrapper;
     }
 
     public async Task<TodoRecord?> GetTodoById(int id, CancellationToken cancellationToken)
