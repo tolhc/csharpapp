@@ -2,4 +2,4 @@
 
 global using System.Collections.ObjectModel;
 global using CSharpApp.Core.Dtos;
-global using Newtonsoft.Json;
+global using System.Text.Json.Serialization;

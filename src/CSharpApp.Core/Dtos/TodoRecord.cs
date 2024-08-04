@@ -1,8 +1,8 @@
 namespace CSharpApp.Core.Dtos;
 
 public record TodoRecord(
-    [property: JsonProperty("userId")] int UserId,
-    [property: JsonProperty("id")] int Id,
-    [property: JsonProperty("title")] string Title,
-    [property: JsonProperty("completed")] bool Completed
+    [property: JsonPropertyName("userId")] int UserId,
+    [property: JsonPropertyName("id")] int Id,
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("completed")] bool Completed
 );
