@@ -3,26 +3,26 @@ namespace CSharpApp.Application.Services;
 public class TodoService : ITodoService
 {
     private readonly ILogger<TodoService> _logger;
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientWrapper _httpClientWrapper;
 
     public TodoService(ILogger<TodoService> logger, 
-        HttpClient httpClient)
+        IHttpClientWrapper httpClient)
     {
         _logger = logger;
-        _httpClient = httpClient;
+        _httpClientWrapper = httpClient;
     }
 
-    public async Task<TodoRecord?> GetTodoById(int id)
+    public async Task<TodoRecord?> GetTodoById(int id, CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetFromJsonAsync<TodoRecord>($"todos/{id}");
+        var response = await _httpClientWrapper.GetAsync<TodoRecord>($"todos/{id}", cancellationToken);
 
         return response;
     }
 
-    public async Task<ReadOnlyCollection<TodoRecord>> GetAllTodos()
+    public async Task<ReadOnlyCollection<TodoRecord>> GetAllTodos(CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetFromJsonAsync<List<TodoRecord>>($"todos");
+        var response = await _httpClientWrapper.GetAsync<List<TodoRecord>>($"todos", cancellationToken);
 
-        return response!.AsReadOnly();
+        return response?.AsReadOnly() ?? ReadOnlyCollection<TodoRecord>.Empty;
     }
 }
