@@ -2,8 +2,8 @@
 
 public interface IPostsService
 {
-    Task<PostRecord?> GetPostById(int id, CancellationToken cancellationToken);
-    Task<ReadOnlyCollection<PostRecord>> GetAllPosts(CancellationToken cancellationToken);
-    Task<PostRecord?> CreatePost(PostRecord postRecord, CancellationToken cancellationToken);
-    Task DeletePostById(int id, CancellationToken cancellationToken);
+    Task<Result<PostRecord?, ApplicationError>> GetPostById(int id, CancellationToken cancellationToken);
+    Task<Result<ReadOnlyCollection<PostRecord>, ApplicationError>> GetAllPosts(CancellationToken cancellationToken);
+    Task<Result<PostRecord?, ApplicationError>> CreatePost(PostRecord postRecord, CancellationToken cancellationToken);
+    Task<UnitResult<ApplicationError>> DeletePostById(int id, CancellationToken cancellationToken);
 }

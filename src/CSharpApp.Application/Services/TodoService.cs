@@ -1,3 +1,5 @@
+using CSharpApp.Core;
+
 namespace CSharpApp.Application.Services;
 
 public class TodoService : ITodoService
@@ -12,17 +14,21 @@ public class TodoService : ITodoService
         _httpClientWrapper = httpClientWrapper;
     }
 
-    public async Task<TodoRecord?> GetTodoById(int id, CancellationToken cancellationToken)
+    public async Task<Result<TodoRecord?, ApplicationError>> GetTodoById(int id, CancellationToken cancellationToken)
     {
-        var response = await _httpClientWrapper.GetAsync<TodoRecord>($"todos/{id}", cancellationToken);
-
+        var response = await _httpClientWrapper.GetAsync<TodoRecord?>($"todos/{id}", cancellationToken);
         return response;
     }
 
-    public async Task<ReadOnlyCollection<TodoRecord>> GetAllTodos(CancellationToken cancellationToken)
+    public async Task<Result<ReadOnlyCollection<TodoRecord>, ApplicationError>> GetAllTodos(CancellationToken cancellationToken)
     {
         var response = await _httpClientWrapper.GetAsync<List<TodoRecord>>($"todos", cancellationToken);
 
-        return response?.AsReadOnly() ?? ReadOnlyCollection<TodoRecord>.Empty;
+        if (response.IsFailure)
+        {
+            return response.Error!;
+        }
+        
+        return response.Value?.AsReadOnly() ?? ReadOnlyCollection<TodoRecord>.Empty;
     }
 }
