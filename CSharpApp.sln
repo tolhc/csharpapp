@@ -2,19 +2,19 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{C2A57CA7-93E7-4291-B815-C605B58AF943}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Api", "CSharpApp.Api\CSharpApp.Api.csproj", "{E02B4A9A-0FFE-40AB-8822-93E1C2862FB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Api", "src\CSharpApp.Api\CSharpApp.Api.csproj", "{E02B4A9A-0FFE-40AB-8822-93E1C2862FB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Core", "CSharpApp.Core\CSharpApp.Core.csproj", "{70CBF7AF-E3DD-4C4D-9694-D9C8CB470DE0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Core", "src\CSharpApp.Core\CSharpApp.Core.csproj", "{70CBF7AF-E3DD-4C4D-9694-D9C8CB470DE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Infrastructure", "CSharpApp.Infrastructure\CSharpApp.Infrastructure.csproj", "{2A0F96CE-4BC1-41BC-B694-5B00346FC48E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Infrastructure", "src\CSharpApp.Infrastructure\CSharpApp.Infrastructure.csproj", "{2A0F96CE-4BC1-41BC-B694-5B00346FC48E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Application", "CSharpApp.Application\CSharpApp.Application.csproj", "{C73BB0C1-5F7C-403B-BCDC-5BAA35699633}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Application", "src\CSharpApp.Application\CSharpApp.Application.csproj", "{C73BB0C1-5F7C-403B-BCDC-5BAA35699633}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{539C1049-8C7D-4473-AE55-87762E97B6DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Infrastructure.Tests.Unit", "CSharpApp.Infrastructure.Tests.Unit\CSharpApp.Infrastructure.Tests.Unit.csproj", "{F55B26B1-9596-4E74-A960-D1A1B48BD129}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Infrastructure.Tests.Unit", "tests\CSharpApp.Infrastructure.Tests.Unit\CSharpApp.Infrastructure.Tests.Unit.csproj", "{F55B26B1-9596-4E74-A960-D1A1B48BD129}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Application.Tests.Unit", "CSharpApp.Application.Tests.Unit\CSharpApp.Application.Tests.Unit.csproj", "{A17CEB4F-A086-4267-985A-670A30096615}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpApp.Application.Tests.Unit", "tests\CSharpApp.Application.Tests.Unit\CSharpApp.Application.Tests.Unit.csproj", "{A17CEB4F-A086-4267-985A-670A30096615}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
