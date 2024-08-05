@@ -90,7 +90,7 @@ public class HttpClientWrapperTests
         result.Error!.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         result.Error.Description.Should().Be("Unsuccessful status code when trying to GET for endpoint myendpoint");
         
-        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1);
+        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1, expectedUrl: "http://fakeaddress.com/myendpoint");
         
         _httpHandlerMock.VerifyNoOtherCalls();
     }
@@ -117,7 +117,7 @@ public class HttpClientWrapperTests
         result.Error!.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         result.Error.Description.Should().Be("Exception when trying to GET for endpoint myendpoint");
         
-        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1);
+        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1, expectedUrl: "http://fakeaddress.com/myendpoint");
         
         _httpHandlerMock.VerifyNoOtherCalls();
     }
@@ -183,7 +183,7 @@ public class HttpClientWrapperTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull().And.Be(expectedResult);
 
-        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Post, times: 1, payload: dataToPost);
+        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Put, times: 1, payload: dataToPost);
         
         _httpHandlerMock.VerifyNoOtherCalls();
     }
@@ -215,12 +215,12 @@ public class HttpClientWrapperTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().NotBeNull().And.Be(expectedResult);
 
-        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Post, times: 1);
+        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Delete, times: 1);
         
         _httpHandlerMock.VerifyNoOtherCalls();
     }
 
-    private static void VerifyHttpHandlerMock(Mock<HttpMessageHandler> httpHandlerMock, HttpMethod expectedMethod, int times, TodoRecord? payload = null)
+    private static void VerifyHttpHandlerMock(Mock<HttpMessageHandler> httpHandlerMock, HttpMethod expectedMethod, int times, TodoRecord? payload = null, string expectedUrl = "http://fakeaddress.com/")
     {
         httpHandlerMock.Protected().Verify(
             "SendAsync",
@@ -228,10 +228,10 @@ public class HttpClientWrapperTests
             ItExpr.Is<HttpRequestMessage>(req =>
                 // ReSharper disable once SimplifyConditionalTernaryExpression (justification: it makes it weirder tbh)
                 req.Method == expectedMethod
-                && req.RequestUri!.ToString().Equals("http://fakeaddress.com/")
+                && req.RequestUri!.ToString().Equals(expectedUrl)
                 && req.Headers.Count() == 1 
                 && req.Headers.Accept.First().MediaType == "application/json"
-                && payload != null ? VerifyPayload(req.Content!, payload) : true
+                && (payload != null ? VerifyPayload(req.Content!, payload) : true)
                 ),
             ItExpr.IsAny<CancellationToken>()
         );
