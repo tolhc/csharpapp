@@ -42,7 +42,7 @@ public class HttpClientWrapper : IHttpClientWrapper
 
             if (!response.IsSuccessStatusCode)
             {
-                return new ApplicationError($"Unsuccessful status code while trying to {method}", response.StatusCode);
+                return new ApplicationError($"Unsuccessful status code when trying to {method} for endpoint {endpoint}", response.StatusCode);
             }
             
             var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -51,7 +51,7 @@ public class HttpClientWrapper : IHttpClientWrapper
         catch (Exception ex)
         {
             _logger.LogError(ex, "Exception when trying to {method} for endpoint {endpoint}", method, endpoint);
-            return new ApplicationError($"Exception while trying to {method}", HttpStatusCode.InternalServerError);
+            return new ApplicationError($"Exception when trying to {method} for endpoint {endpoint}", HttpStatusCode.InternalServerError);
         }
         
     }
