@@ -1,6 +1,4 @@
-﻿using CSharpApp.Infrastructure.Clients;
-
-namespace CSharpApp.Infrastructure;
+﻿namespace CSharpApp.Infrastructure;
 
 public static class ServiceCollectionExtensions
 {

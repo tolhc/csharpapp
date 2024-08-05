@@ -1,4 +1,6 @@
-﻿using CSharpApp.Application.Services;
+﻿using System.Net;
+using CSharpApp.Application.Services;
+using CSharpApp.Core;
 using CSharpApp.Core.Dtos;
 using CSharpApp.Core.Interfaces;
 using FluentAssertions;
@@ -25,17 +27,17 @@ public class TodoServiceTests
         var result = await sut.GetTodoById(2, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.Be(expected);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.Be(expected);
         
         _clientMock.Verify(c => c.GetAsync<TodoRecord>("todos/2", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
     }
     
     [Fact]
-    public async Task GetTodoById_WhenClientThrows_ShouldThrow() //TODO: fix when introducing Result pattern
+    public async Task GetTodoById_WhenClientThrows_ShouldThrow() // wouldn't happen
     {
         // Arrange
-        var expected = new TodoRecord(1, 2, "title", true);
         _clientMock.Setup(c => c.GetAsync<TodoRecord>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("boom"));
 
@@ -45,6 +47,26 @@ public class TodoServiceTests
 
         // Assert
         await resultFunc.Should().ThrowAsync<HttpRequestException>();
+        
+        _clientMock.Verify(c => c.GetAsync<TodoRecord>("todos/2", It.IsAny<CancellationToken>()), Times.Once);
+        _clientMock.VerifyNoOtherCalls();
+    }
+    
+    [Fact]
+    public async Task GetTodoById_WhenClientReturnsFailure_ShouldReturnFailure()
+    {
+        // Arrange
+        var expectedError = new ApplicationError("Some error", HttpStatusCode.NotFound);
+        _clientMock.Setup(c => c.GetAsync<TodoRecord>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedError);
+
+        // Act
+        var sut = new TodoService(_loggerMock.Object, _clientMock.Object);
+        var result = await sut.GetTodoById(2, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(expectedError);
         
         _clientMock.Verify(c => c.GetAsync<TodoRecord>("todos/2", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
@@ -67,7 +89,8 @@ public class TodoServiceTests
         var result = await sut.GetAllTodos(CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.NotBeEmpty().And.BeEquivalentTo(expected);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.NotBeEmpty().And.BeEquivalentTo(expected);
         
         _clientMock.Verify(c => c.GetAsync<List<TodoRecord>>("todos", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
@@ -85,14 +108,15 @@ public class TodoServiceTests
         var result = await sut.GetAllTodos(CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.BeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.BeEmpty();
         
         _clientMock.Verify(c => c.GetAsync<List<TodoRecord>>("todos", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
     }
     
     [Fact]
-    public async Task GetAllTodos_WhenClientThrows_ShouldThrow() //TODO: fix when introducing Result pattern
+    public async Task GetAllTodos_WhenClientThrows_ShouldThrow() // wouldn't happen
     {
         // Arrange
         _clientMock.Setup(c => c.GetAsync<List<TodoRecord>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -104,6 +128,26 @@ public class TodoServiceTests
 
         // Assert
         await resultFunc.Should().ThrowAsync<HttpRequestException>();
+        
+        _clientMock.Verify(c => c.GetAsync<List<TodoRecord>>("todos", It.IsAny<CancellationToken>()), Times.Once);
+        _clientMock.VerifyNoOtherCalls();
+    }
+    
+    [Fact]
+    public async Task GetAllTodos_WhenClientReturnsFailure_ShouldReturnFailure()
+    {
+        // Arrange
+        var expectedError = new ApplicationError("Some error", HttpStatusCode.NotFound);
+        _clientMock.Setup(c => c.GetAsync<List<TodoRecord>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedError);
+
+        // Act
+        var sut = new TodoService(_loggerMock.Object, _clientMock.Object);
+        var result = await sut.GetAllTodos(CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(expectedError);
         
         _clientMock.Verify(c => c.GetAsync<List<TodoRecord>>("todos", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();

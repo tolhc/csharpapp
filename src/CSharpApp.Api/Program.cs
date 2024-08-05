@@ -31,8 +31,12 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/todos", async (ITodoService todoService, CancellationToken cancellationToken) =>
     {
-        var todos = await todoService.GetAllTodos(cancellationToken);
-        return todos;
+        var todosResult = await todoService.GetAllTodos(cancellationToken);
+        if (todosResult.IsFailure)
+        {
+            Results.StatusCode((int)todosResult.Error!.StatusCode);
+        }
+        return todosResult.Value;
     })
     .WithName("GetTodos")
     .WithOpenApi()
@@ -40,8 +44,12 @@ app.MapGet("/todos", async (ITodoService todoService, CancellationToken cancella
 
 app.MapGet("/todos/{id}", async ([FromRoute] int id, ITodoService todoService, CancellationToken cancellationToken) =>
     {
-        var todos = await todoService.GetTodoById(id ,cancellationToken);
-        return todos;
+        var todosResult = await todoService.GetTodoById(id ,cancellationToken);
+        if (todosResult.IsFailure)
+        {
+            Results.StatusCode((int)todosResult.Error!.StatusCode);
+        }
+        return todosResult.Value;
     })
     .WithName("GetTodosById")
     .WithOpenApi()
@@ -50,8 +58,12 @@ app.MapGet("/todos/{id}", async ([FromRoute] int id, ITodoService todoService, C
 
 app.MapGet("/posts", async (IPostsService postsService, CancellationToken cancellationToken) =>
     {
-        var todos = await postsService.GetAllPosts(cancellationToken);
-        return todos;
+        var postsResult = await postsService.GetAllPosts(cancellationToken);
+        if (postsResult.IsFailure)
+        {
+            Results.StatusCode((int)postsResult.Error!.StatusCode);
+        }
+        return postsResult.Value;
     })
     .WithName("GetPosts")
     .WithOpenApi()
@@ -59,8 +71,12 @@ app.MapGet("/posts", async (IPostsService postsService, CancellationToken cancel
 
 app.MapGet("/posts/{id}", async ([FromRoute] int id, IPostsService postsService, CancellationToken cancellationToken) =>
     {
-        var todos = await postsService.GetPostById(id, cancellationToken);
-        return todos;
+        var postsResult = await postsService.GetPostById(id, cancellationToken);
+        if (postsResult.IsFailure)
+        {
+            Results.StatusCode((int)postsResult.Error!.StatusCode);
+        }
+        return postsResult.Value;
     })
     .WithName("GetPostsById")
     .WithOpenApi()
@@ -70,7 +86,11 @@ app.MapGet("/posts/{id}", async ([FromRoute] int id, IPostsService postsService,
 app.MapPost("/posts", async ([FromBody] PostRecord post, IPostsService postsService, CancellationToken cancellationToken) =>
     {
         var postResult = await postsService.CreatePost(post, cancellationToken);
-        return Results.Created($"posts/{postResult!.Id}", postResult);
+        if (postResult.IsFailure)
+        {
+            Results.StatusCode((int)postResult.Error!.StatusCode);
+        }
+        return Results.Created($"posts/{postResult.Value!.Id}", postResult.Value);
     })
     .WithName("CreatePosts")
     .WithOpenApi()
@@ -78,7 +98,11 @@ app.MapPost("/posts", async ([FromBody] PostRecord post, IPostsService postsServ
 
 app.MapDelete("/posts/{id}", async ([FromRoute] int id, IPostsService postsService, CancellationToken cancellationToken) =>
     {
-        await postsService.DeletePostById(id, cancellationToken);
+        var deletePostResult = await postsService.DeletePostById(id, cancellationToken);
+        if (deletePostResult.IsFailure)
+        {
+            Results.StatusCode((int)deletePostResult.Error!.StatusCode);
+        }
         return Results.Ok();
     })
     .WithName("DeletePostsById")

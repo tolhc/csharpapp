@@ -1,4 +1,6 @@
-﻿namespace CSharpApp.Application.Services;
+﻿using CSharpApp.Core;
+
+namespace CSharpApp.Application.Services;
 
 public class PostsService : IPostsService
 {
@@ -12,26 +14,35 @@ public class PostsService : IPostsService
         _httpClientWrapper = httpClientWrapper;
     }
     
-    public async Task<PostRecord?> GetPostById(int id, CancellationToken cancellationToken)
+    public async Task<Result<PostRecord?, ApplicationError>> GetPostById(int id, CancellationToken cancellationToken)
     {
         var response = await _httpClientWrapper.GetAsync<PostRecord>($"posts/{id}", cancellationToken);
 
         return response;
     }
 
-    public async Task<ReadOnlyCollection<PostRecord>> GetAllPosts(CancellationToken cancellationToken)
+    public async Task<Result<ReadOnlyCollection<PostRecord>, ApplicationError>> GetAllPosts(CancellationToken cancellationToken)
     {
         var response = await _httpClientWrapper.GetAsync<List<PostRecord>>("posts", cancellationToken);
 
-        return response?.AsReadOnly() ?? ReadOnlyCollection<PostRecord>.Empty;
+        if (response.IsFailure)
+        {
+            return response.Error!;
+        }
+        
+        return response.Value?.AsReadOnly() ?? ReadOnlyCollection<PostRecord>.Empty;
     }
 
-    public async Task<PostRecord?> CreatePost(PostRecord postRecord, CancellationToken cancellationToken)
+    public async Task<Result<PostRecord?, ApplicationError>> CreatePost(PostRecord postRecord, CancellationToken cancellationToken)
     {
         var response = await _httpClientWrapper.PostAsync("posts", postRecord, cancellationToken);
         return response;
     }
-    
-    public async Task DeletePostById(int id, CancellationToken cancellationToken) => await _httpClientWrapper.DeleteAsync<PostRecord?>($"posts/{id}", cancellationToken);
-    
+
+    public async Task<UnitResult<ApplicationError>> DeletePostById(int id, CancellationToken cancellationToken)
+    {
+        var response = await _httpClientWrapper.DeleteAsync<PostRecord?>($"posts/{id}", cancellationToken);
+        return response.IsFailure ? response.Error! : UnitResult<ApplicationError>.Success();
+    }
+
 }

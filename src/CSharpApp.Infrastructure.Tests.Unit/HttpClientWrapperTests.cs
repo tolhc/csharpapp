@@ -3,6 +3,7 @@ using System.Text.Json;
 using CSharpApp.Core.Dtos;
 using CSharpApp.Infrastructure.Clients;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
 
@@ -10,7 +11,8 @@ namespace CSharpApp.Infrastructure.Tests.Unit;
 
 public class HttpClientWrapperTests
 {
-    private Mock<HttpMessageHandler> _httpHandlerMock = new(MockBehavior.Strict);
+    private readonly Mock<HttpMessageHandler> _httpHandlerMock = new(MockBehavior.Strict);
+    private readonly Mock<ILogger<HttpClientWrapper>> _loggerMock = new();
     private readonly HttpClient _clientMock;
     
     private const string _mockedResponse = """
@@ -50,11 +52,12 @@ public class HttpClientWrapperTests
         
         // Act
 
-        var sut = new HttpClientWrapper(_clientMock);
+        var sut = new HttpClientWrapper(_clientMock, _loggerMock.Object);
         var result = await sut.GetAsync<TodoRecord>(It.IsAny<string>(), CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.Be(expectedResult);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.Be(expectedResult);
 
         VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1);
         
@@ -62,7 +65,7 @@ public class HttpClientWrapperTests
     }
     
     [Fact]
-    public async Task GetAsync_WhenNoSuccessCode_ShouldThrowException() //TODO: fix when introducing Result pattern
+    public async Task GetAsync_WhenNoSuccessCode_ShouldReturnApplicationErrorResult()
     {
         // Arrange
         _httpHandlerMock
@@ -72,18 +75,45 @@ public class HttpClientWrapperTests
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage
             {
-                StatusCode = HttpStatusCode.InternalServerError,
+                StatusCode = HttpStatusCode.BadRequest,
                 Content = null
             })
             .Verifiable();
 
         // Act
 
-        var sut = new HttpClientWrapper(_clientMock);
-        var resultFunc = async () => await sut.GetAsync<TodoRecord>(It.IsAny<string>(), CancellationToken.None);
+        var sut = new HttpClientWrapper(_clientMock, _loggerMock.Object);
+        var result = await sut.GetAsync<TodoRecord>(It.IsAny<string>(), CancellationToken.None);
 
         // Assert
-        await resultFunc.Should().ThrowAsync<HttpRequestException>();
+        result.IsFailure.Should().BeTrue();
+        result.Error!.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        
+        VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1);
+        
+        _httpHandlerMock.VerifyNoOtherCalls();
+    }
+    
+    [Fact]
+    public async Task GetAsync_WhenClientThrows_ShouldReturnApplicationErrorResult()
+    {
+        // Arrange
+        _httpHandlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>("SendAsync",
+                ItExpr.Is<HttpRequestMessage>(r => r.Method == HttpMethod.Get),
+                ItExpr.IsAny<CancellationToken>())
+            .ThrowsAsync(new TimeoutException("random timeout"))
+            .Verifiable();
+
+        // Act
+
+        var sut = new HttpClientWrapper(_clientMock, _loggerMock.Object);
+        var result = await sut.GetAsync<TodoRecord>(It.IsAny<string>(), CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error!.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
         
         VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1);
         
@@ -111,11 +141,12 @@ public class HttpClientWrapperTests
         
         // Act
 
-        var sut = new HttpClientWrapper(_clientMock);
+        var sut = new HttpClientWrapper(_clientMock, _loggerMock.Object);
         var result = await sut.PostAsync(It.IsAny<string>(), dataToPost, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.Be(expectedResult);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.Be(expectedResult);
 
         VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Post, times: 1, payload: dataToPost);
         
@@ -143,11 +174,12 @@ public class HttpClientWrapperTests
         
         // Act
 
-        var sut = new HttpClientWrapper(_clientMock);
+        var sut = new HttpClientWrapper(_clientMock, _loggerMock.Object);
         var result = await sut.PutAsync(It.IsAny<string>(), dataToPost, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.Be(expectedResult);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.Be(expectedResult);
 
         VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Post, times: 1, payload: dataToPost);
         
@@ -174,11 +206,12 @@ public class HttpClientWrapperTests
         
         // Act
 
-        var sut = new HttpClientWrapper(_clientMock);
+        var sut = new HttpClientWrapper(_clientMock, _loggerMock.Object);
         var result = await sut.DeleteAsync<TodoRecord>(It.IsAny<string>(), CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.Be(expectedResult);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.Be(expectedResult);
 
         VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Post, times: 1);
         

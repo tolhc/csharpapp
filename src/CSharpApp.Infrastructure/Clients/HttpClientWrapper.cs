@@ -3,41 +3,57 @@
 public class HttpClientWrapper : IHttpClientWrapper
 {
     private readonly HttpClient _httpClient;
+    private readonly ILogger<HttpClientWrapper> _logger;
     
-    public HttpClientWrapper(HttpClient httpClient)
+    public HttpClientWrapper(HttpClient httpClient, ILogger<HttpClientWrapper> logger)
     {
         _httpClient = httpClient;
+        _logger = logger;
     }
     
-    public async Task<T?> GetAsync<T>(string endpoint, CancellationToken cancellationToken)
+    public async Task<Result<T?, ApplicationError>> GetAsync<T>(string endpoint, CancellationToken cancellationToken)
     {
         return await SendAsync<T?>(HttpMethod.Get, endpoint, cancellationToken: cancellationToken, httpCompletionOption: HttpCompletionOption.ResponseHeadersRead);
     }
 
-    public async Task<T?> PostAsync<T>(string endpoint, T data, CancellationToken cancellationToken)
+    public async Task<Result<T?, ApplicationError>> PostAsync<T>(string endpoint, T data, CancellationToken cancellationToken)
     {
         return await SendAsync(HttpMethod.Post, endpoint, data, cancellationToken);
     }
 
-    public async Task<T?> PutAsync<T>(string endpoint, T data, CancellationToken cancellationToken)
+    public async Task<Result<T?, ApplicationError>> PutAsync<T>(string endpoint, T data, CancellationToken cancellationToken)
     {
         return await SendAsync(HttpMethod.Put, endpoint, data, cancellationToken);
     }
 
-    public async Task<T?> DeleteAsync<T>(string endpoint, CancellationToken cancellationToken)
+    public async Task<Result<T?, ApplicationError>> DeleteAsync<T>(string endpoint, CancellationToken cancellationToken)
     {
         return await SendAsync<T?>(HttpMethod.Delete, endpoint, cancellationToken: cancellationToken);
     }
 
-    private async Task<T?> SendAsync<T>(HttpMethod method, string endpoint, T? body = default, 
+    private async Task<Result<T?, ApplicationError>> SendAsync<T>(HttpMethod method, string endpoint, T? body = default, 
         CancellationToken cancellationToken = default,
         HttpCompletionOption httpCompletionOption = HttpCompletionOption.ResponseContentRead)
     {
-        var httpRequestMessage = GetRequestMessage(method, endpoint, body);
-        using var response = await _httpClient.SendAsync(httpRequestMessage, httpCompletionOption, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        return await JsonSerializer.DeserializeAsync<T?>(responseStream, cancellationToken: cancellationToken) ?? default;
+        try
+        {
+            var httpRequestMessage = GetRequestMessage(method, endpoint, body);
+            using var response = await _httpClient.SendAsync(httpRequestMessage, httpCompletionOption, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new ApplicationError($"Unsuccessful status code while trying to {method}", response.StatusCode);
+            }
+            
+            var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            return await JsonSerializer.DeserializeAsync<T?>(responseStream, cancellationToken: cancellationToken) ?? default;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Exception when trying to {method} for endpoint {endpoint}", method, endpoint);
+            return new ApplicationError($"Exception while trying to {method}", HttpStatusCode.InternalServerError);
+        }
+        
     }
 
     private static HttpRequestMessage GetRequestMessage<T>(HttpMethod method, string endpoint, T? body)

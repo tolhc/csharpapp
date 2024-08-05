@@ -1,4 +1,6 @@
-﻿using CSharpApp.Application.Services;
+﻿using System.Net;
+using CSharpApp.Application.Services;
+using CSharpApp.Core;
 using CSharpApp.Core.Dtos;
 using CSharpApp.Core.Interfaces;
 using FluentAssertions;
@@ -25,14 +27,15 @@ public class PostsServiceTests
         var result = await sut.GetPostById(2, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.Be(expected);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.Be(expected);
         
         _clientMock.Verify(c => c.GetAsync<PostRecord>("posts/2", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
     }
     
     [Fact]
-    public async Task GetPostById_WhenClientThrows_ShouldThrow() //Posts: fix when introducing Result pattern
+    public async Task GetPostById_WhenClientThrows_ShouldThrow() // wouldn't happen
     {
         // Arrange
         var expected = new PostRecord(1, 2, "post title", "post body");
@@ -45,6 +48,26 @@ public class PostsServiceTests
 
         // Assert
         await resultFunc.Should().ThrowAsync<HttpRequestException>();
+        
+        _clientMock.Verify(c => c.GetAsync<PostRecord>("posts/2", It.IsAny<CancellationToken>()), Times.Once);
+        _clientMock.VerifyNoOtherCalls();
+    }
+    
+    [Fact]
+    public async Task GetPostById_WhenClientReturnsFailure_ShouldReturnFailure()
+    {
+        // Arrange
+        var expectedError = new ApplicationError("Some error", HttpStatusCode.NotFound);
+        _clientMock.Setup(c => c.GetAsync<PostRecord>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedError);
+
+        // Act
+        var sut = new PostsService(_loggerMock.Object, _clientMock.Object);
+        var result = await sut.GetPostById(2, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(expectedError);
         
         _clientMock.Verify(c => c.GetAsync<PostRecord>("posts/2", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
@@ -67,7 +90,8 @@ public class PostsServiceTests
         var result = await sut.GetAllPosts(CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.NotBeEmpty().And.BeEquivalentTo(expected);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.NotBeEmpty().And.BeEquivalentTo(expected);
         
         _clientMock.Verify(c => c.GetAsync<List<PostRecord>>("posts", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
@@ -85,14 +109,15 @@ public class PostsServiceTests
         var result = await sut.GetAllPosts(CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.BeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.BeEmpty();
         
         _clientMock.Verify(c => c.GetAsync<List<PostRecord>>("posts", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
     }
     
     [Fact]
-    public async Task GetAllPosts_WhenClientThrows_ShouldThrow() //Posts: fix when introducing Result pattern
+    public async Task GetAllPosts_WhenClientThrows_ShouldThrow() // wouldn't happen
     {
         // Arrange
         _clientMock.Setup(c => c.GetAsync<List<PostRecord>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -104,6 +129,26 @@ public class PostsServiceTests
 
         // Assert
         await resultFunc.Should().ThrowAsync<HttpRequestException>();
+        
+        _clientMock.Verify(c => c.GetAsync<List<PostRecord>>("posts", It.IsAny<CancellationToken>()), Times.Once);
+        _clientMock.VerifyNoOtherCalls();
+    }
+    
+    [Fact]
+    public async Task GetAllPosts_WhenClientReturnsFailure_ShouldReturnFailure()
+    {
+        // Arrange
+        var expectedError = new ApplicationError("Some error", HttpStatusCode.NotFound);
+        _clientMock.Setup(c => c.GetAsync<List<PostRecord>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedError);
+
+        // Act
+        var sut = new PostsService(_loggerMock.Object, _clientMock.Object);
+        var result = await sut.GetAllPosts(CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(expectedError);
         
         _clientMock.Verify(c => c.GetAsync<List<PostRecord>>("posts", It.IsAny<CancellationToken>()), Times.Once);
         _clientMock.VerifyNoOtherCalls();
@@ -123,7 +168,8 @@ public class PostsServiceTests
         var result = await sut.CreatePost(posted, CancellationToken.None);
 
         // Assert
-        result.Should().NotBeNull().And.Be(expected);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull().And.Be(expected);
         
         _clientMock.Verify(c => c.PostAsync("posts", It.Is<PostRecord>(r => r == posted), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -131,10 +177,9 @@ public class PostsServiceTests
     }
     
     [Fact]
-    public async Task CreatePost_WhenClientThrows_ShouldThrow() //Posts: fix when introducing Result pattern
+    public async Task CreatePost_WhenClientThrows_ShouldThrow() // wouldn't happen
     {
         // Arrange
-        var expected = new PostRecord(1, 2, "post title", "post body");
         _clientMock.Setup(c => c.PostAsync(It.IsAny<string>(), It.IsAny<PostRecord>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("boom"));
         
@@ -153,6 +198,29 @@ public class PostsServiceTests
     }
     
     [Fact]
+    public async Task CreatePost_WhenClientReturnsFailure_ShouldReturnFailure()
+    {
+        // Arrange
+        var expectedError = new ApplicationError("Some error", HttpStatusCode.BadRequest);
+        _clientMock.Setup(c => c.PostAsync(It.IsAny<string>(), It.IsAny<PostRecord>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedError);
+        
+        var posted = new PostRecord(1, 2, "post title to create", "post body to create");
+
+        // Act
+        var sut = new PostsService(_loggerMock.Object, _clientMock.Object);
+        var result = await sut.CreatePost(posted, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(expectedError);
+        
+        _clientMock.Verify(c => c.PostAsync("posts", It.Is<PostRecord>(r => r == posted), It.IsAny<CancellationToken>()),
+            Times.Once);
+        _clientMock.VerifyNoOtherCalls();
+    }
+    
+    [Fact]
     public async Task DeletePostById_WhenClientReturns_ShouldReturnSuccessfully()
     {
         // Arrange
@@ -161,16 +229,18 @@ public class PostsServiceTests
 
         // Act
         var sut = new PostsService(_loggerMock.Object, _clientMock.Object);
-        await sut.DeletePostById(2, CancellationToken.None);
+        var result = await sut.DeletePostById(2, CancellationToken.None);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
+        
         _clientMock.Verify(c => c.DeleteAsync<PostRecord>(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Once);
         _clientMock.VerifyNoOtherCalls();
     }
     
     [Fact]
-    public async Task DeletePostById_WhenClientThrows_ShouldThrow() //Posts: fix when introducing Result pattern
+    public async Task DeletePostById_WhenClientThrows_ShouldThrow() // wouldn't happen
     {
         // Arrange
         _clientMock.Setup(c => c.DeleteAsync<PostRecord>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -182,6 +252,27 @@ public class PostsServiceTests
 
         // Assert
         await resultFunc.Should().ThrowAsync<HttpRequestException>();
+        
+        _clientMock.Verify(c => c.DeleteAsync<PostRecord>(It.IsAny<string>(), It.IsAny<CancellationToken>()), 
+            Times.Once);
+        _clientMock.VerifyNoOtherCalls();
+    }
+    
+    [Fact]
+    public async Task DeletePostById_WhenClientReturnsFailure_ShouldReturnFailure() // wouldn't happen
+    {
+        // Arrange
+        var expectedError = new ApplicationError("Some error", HttpStatusCode.BadRequest);
+        _clientMock.Setup(c => c.DeleteAsync<PostRecord>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(expectedError);
+
+        // Act
+        var sut = new PostsService(_loggerMock.Object, _clientMock.Object);
+        var result = await sut.DeletePostById(2, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error.Should().Be(expectedError);
         
         _clientMock.Verify(c => c.DeleteAsync<PostRecord>(It.IsAny<string>(), It.IsAny<CancellationToken>()), 
             Times.Once);
