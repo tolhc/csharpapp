@@ -9,3 +9,25 @@ GET {{CSharpApp.Api_HostAddress}}/todos/1
 Accept: application/json
 
 ###
+
+GET {{CSharpApp.Api_HostAddress}}/posts/
+Accept: application/json
+
+###
+POST {{CSharpApp.Api_HostAddress}}/posts/
+Accept: application/json
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "title": "This the post title",
+  "body": "This is the body of the post"
+}
+
+###
+GET {{CSharpApp.Api_HostAddress}}/posts/1
+Accept: application/json
+
+###
+DELETE {{CSharpApp.Api_HostAddress}}/posts/1
+Accept: application/json

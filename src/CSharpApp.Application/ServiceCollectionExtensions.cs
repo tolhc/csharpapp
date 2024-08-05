@@ -8,5 +8,6 @@ public static class ServiceCollectionExtensions
     public static void AddApplicationServices(this IServiceCollection services)
     {
         services.AddScoped<ITodoService, TodoService>();
+        services.AddScoped<IPostsService, PostsService>();
     }
 }
