@@ -7,6 +7,7 @@
 
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+        <RootNamespace>CSharpApp.Infrastructure.Tests.Unit</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,7 +24,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\CSharpApp.Application\CSharpApp.Application.csproj" />
+      <ProjectReference Include="..\..\src\CSharpApp.Infrastructure\CSharpApp.Infrastructure.csproj" />
     </ItemGroup>
 
 </Project>
