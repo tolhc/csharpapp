@@ -83,11 +83,12 @@ public class HttpClientWrapperTests
         // Act
 
         var sut = new HttpClientWrapper(_clientMock, _loggerMock.Object);
-        var result = await sut.GetAsync<TodoRecord>(It.IsAny<string>(), CancellationToken.None);
+        var result = await sut.GetAsync<TodoRecord>("myendpoint", CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        result.Error.Description.Should().Be("Unsuccessful status code when trying to GET for endpoint myendpoint");
         
         VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1);
         
@@ -109,11 +110,12 @@ public class HttpClientWrapperTests
         // Act
 
         var sut = new HttpClientWrapper(_clientMock, _loggerMock.Object);
-        var result = await sut.GetAsync<TodoRecord>(It.IsAny<string>(), CancellationToken.None);
+        var result = await sut.GetAsync<TodoRecord>("myendpoint", CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        result.Error.Description.Should().Be("Exception when trying to GET for endpoint myendpoint");
         
         VerifyHttpHandlerMock(_httpHandlerMock, HttpMethod.Get, times: 1);
         
